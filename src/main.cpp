@@ -82,7 +82,7 @@ void lcd_ClearOneLine(int row);
 void lcd_ClearCursor(int row);
 void lcd_DisplayMenu(Menu_e Menu, Menu_state_e menu_submenu_state);
 void lcd_PrintCursor(Menu_state_e menu_submenu_state, uint8_t start, uint8_t count, uint8_t cursorPosition);
-void StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state);
+bool StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state);
 
 LiquidCrystal_I2C lcd(0x27,16,2);
 
@@ -109,10 +109,11 @@ void loop(void)
 	while(true)
 	{
 		ret = lcd_UpdateCursor(estado_actual,ROWNUM,COLNUM);
+		ret |= StateMachine_Control(estado_actual,menu_submenu_state);
 		if (ret == 1){
 			lcd_DisplayMenu(estado_actual,menu_submenu_state);
 		}
-		StateMachine_Control(estado_actual,menu_submenu_state);
+		
 	}
 }
 
@@ -369,30 +370,62 @@ void lcd_PrintCursor(Menu_state_e menu_submenu_state, uint8_t start, uint8_t cou
 }
 
 
-void StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state)
+bool StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state)
 {
 	switch(Menu)
 	{
 		case TOMAR_MEDICION:
 		{
 			move_t buttonProcess = DONTMOVE;
+			bool buttonOut = 1;
 			while(buttonProcess != ENTER)
 			{
+				float dotcount = 1000.0;
+				uint8_t dotiter = 0;
+
+				/* Muestro el periodo en segundos*/
 				lcd.clear();
 				lcd.setCursor(0,0);
-				lcd.print("Periodo = ");
+				lcd.print("T = ");
 				float periodo = GetEEPROMValue(PERIODO);
-				lcd.setCursor(10,0);
-				lcd.print(periodo);
+				lcd.setCursor(4,0);
+				lcd.print(periodo/1000); //convierto de milisegundos a segundos
+				lcd.print("sec");
+
 				double lastmillis = millis();
-				while((millis() - lastmillis) <= periodo || (CheckButton() != ENTER))
+				double timedone = 0; // se le asigna el tiempo transcurrido dentro del while loop siguiente
+
+				while(buttonOut)
 				{
-					//hola
+					if (CheckButton() != ENTER)
+					{
+						timedone = millis() - lastmillis;
+						if(timedone >= periodo)
+						{
+							buttonOut = 0;
+						}
+					}
+					else{
+						buttonOut = 0;
+					}
+					
+					/* 	Muestra un punto cada 1 segundo transcurrido
+						Esto es solo un ejemplo */
+					if(timedone == dotcount)
+					{
+						Serial.println("Son iguales");
+						lcd.setCursor(dotiter,1);
+						lcd.print(".");
+						dotiter++;
+						dotcount = dotcount + 1000.0;
+					}
 				}
 				buttonProcess = ENTER;
 			}
 			estado_actual = INICIO_MEDICION;
+			return 1;
 		}
 		break;
 	}
+	return 0;
 }
