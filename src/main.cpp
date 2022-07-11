@@ -237,7 +237,7 @@ bool lcd_UpdateCursor(Menu_e Menu, int row, int col)
 			{
 				case AJUSTES:
 				{
-					menu_submenu_state = AJUSTES_SUBMENU;
+					menu_submenu_state = AJUSTES_SUBMENU; 
 					estado_actual = CFG_HELICES;
 				}
 				break;
@@ -458,8 +458,8 @@ bool StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state)
 				lcd.print(periodo/1000); //convierto de milisegundos a segundos
 				lcd.print("sec");
 
-				double lastmillis = millis();
-				double timedone = 0; // se le asigna el tiempo transcurrido dentro del while loop siguiente
+				unsigned long lastmillis = millis();
+				unsigned long timedone = 0; // se le asigna el tiempo transcurrido dentro del while loop siguiente
 
 				while(buttonOut)
 				{
@@ -805,7 +805,7 @@ bool StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state)
 
 					case UP:
 					{
-						periodo = periodo + 50;
+						periodo = periodo + 100;
 						lcd.setCursor(0,1);
 						lcd.print(periodo);
 						lcd.print("mSeg");	
@@ -814,8 +814,8 @@ bool StateMachine_Control(Menu_e Menu, Menu_state_e menu_submenu_state)
 
 					case DOWN:
 					{
-						if((periodo - 50) != 0){
-							periodo = periodo - 50;
+						if((periodo - 100) != 0){
+							periodo = periodo - 100;
 						}
 						lcd.setCursor(0,1);
 						lcd.print(periodo);
